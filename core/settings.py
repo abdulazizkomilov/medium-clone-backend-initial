@@ -233,3 +233,11 @@ DJANGORESIZED_DEFAULT_NORMALIZE_ROTATION = True
 
 BIRTH_YEAR_MIN = 1900
 BIRTH_YEAR_MAX = datetime.now().year
+
+
+EMAIL_BACKEND = config('EMAIL_BACKEND', default='')
+EMAIL_HOST = config('EMAIL_HOST', default='')
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default='')
+EMAIL_PORT = config('EMAIL_PORT', default='')
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')

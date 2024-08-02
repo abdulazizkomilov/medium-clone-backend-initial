@@ -1,5 +1,6 @@
 import datetime
-
+from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
 import redis
 from decouple import config
 from django.conf import settings
@@ -88,3 +89,22 @@ class UserService:
                 settings.SIMPLE_JWT.get("REFRESH_TOKEN_LIFETIME"),
             )
         return {"access": access, "refresh": refresh}
+    
+
+class SendEmailService:
+    @staticmethod
+    def send_email(email, otp_code):
+        subject = 'Welcome to Our Service!'
+        message = render_to_string('emails/email_template.html', {
+            'email': email,
+            'otp_code': otp_code
+        })
+
+        email = EmailMessage(
+            subject,
+            message,
+            settings.EMAIL_HOST_USER,
+            [email]
+        )
+        email.content_subtype = 'html'
+        email.send(fail_silently=False)
