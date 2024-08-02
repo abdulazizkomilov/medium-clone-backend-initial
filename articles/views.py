@@ -12,6 +12,8 @@ from articles.serializers import (
     ArticleDetailCommentsSerializer, ClapSerializer )
 from django_filters.rest_framework import DjangoFilterBackend
 from articles.filters import ArticleFilter
+from rest_framework.decorators import action
+from users.models import ReadingHistory
 
 
 class ArticlesView(viewsets.ModelViewSet):
@@ -54,6 +56,26 @@ class ArticlesView(viewsets.ModelViewSet):
         else:
             raise exceptions.PermissionDenied()
 
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.views_count += 1
+        instance.save(update_fields=['views_count'])
+
+        ReadingHistory.objects.get_or_create(
+            user=request.user, article=instance      
+        )     # ushbu qator qo'shildi
+
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+		
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def read(self, request, pk=None):
+        article = self.get_object()
+
+        article.reads_count += 1
+        article.save(update_fields=['reads_count'])
+        return Response({"detail": _("Maqolani o'qish soni ortdi.")}, status=status.HTTP_200_OK)
 
 
 class TopicFollowView(APIView):

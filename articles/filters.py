@@ -2,7 +2,7 @@
 
 import django_filters
 from .models import Article, Favorite
-from users.models import Recommendation
+from users.models import Recommendation, ReadingHistory
 from django.db.models import Q
 
 
@@ -12,6 +12,7 @@ class ArticleFilter(django_filters.FilterSet):
     is_recommend = django_filters.BooleanFilter(method='filter_by_recommend')
     search = django_filters.CharFilter(method='search_filter')
     is_user_favorites = django_filters.BooleanFilter(method='user_favorites')
+    is_reading_history = django_filters.BooleanFilter(method='user_reading_history')
 
     class Meta:
         model = Article
@@ -50,4 +51,9 @@ class ArticleFilter(django_filters.FilterSet):
     def user_favorites(self, queryset, name, value):
         favorites = Favorite.objects.filter(user=self.request.user).order_by('-created_at')
         article_ids = favorites.values_list('article_id', flat=True)
+        return queryset.filter(id__in=article_ids)
+    
+    def user_reading_history(self, queryset, name, value):
+        reading_history = ReadingHistory.objects.filter(user=self.request.user).order_by('-created_at')
+        article_ids = reading_history.values_list('article_id', flat=True)
         return queryset.filter(id__in=article_ids)

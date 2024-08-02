@@ -103,3 +103,20 @@ class Recommendation(BaseModel):
 
     def __str__(self) -> str:
         return f"{self.user} - {self.more}"
+    
+
+class ReadingHistory(BaseModel):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, limit_choices_to={'is_active': True}, related_name="reading_history"
+    )
+    article = models.ForeignKey(
+        'articles.Article', on_delete=models.CASCADE, related_name="reading_history"
+    )
+
+    class Meta:
+        db_table = "reading_history"
+        verbose_name = "Reading History"
+        verbose_name_plural = "Reading Histories"
+        ordering = ['-created_at']
+
+    
