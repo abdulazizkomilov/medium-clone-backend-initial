@@ -141,3 +141,16 @@ class Favorite(BaseModel):
         verbose_name = "Favorite"
         verbose_name_plural = "Favorites"
         ordering = ['-created_at']
+
+
+class Pin(BaseModel):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, limit_choices_to={'is_active': True}, related_name="pins")
+    article = models.ForeignKey(
+        Article, on_delete=models.CASCADE, related_name="pins")
+
+    class Meta:
+        db_table = "pin"
+        verbose_name = "Pin"
+        verbose_name_plural = "Pins"
+        ordering = ['-created_at']
