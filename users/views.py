@@ -1,7 +1,7 @@
 from rest_framework import status, permissions, generics, parsers, exceptions, viewsets
 from rest_framework.response import Response
 from django.db.models import Sum
-from datetime import timezone
+from django.utils import timezone
 from rest_framework.views import APIView
 from django.contrib.auth import authenticate, update_session_auth_hash
 from rest_framework_simplejwt.tokens import RefreshToken
