@@ -127,3 +127,17 @@ class TopicFollow(BaseModel):
 
     def __str__(self):
         return f"{self.user.username} follows {self.topic.name}"
+
+
+class Favorite(BaseModel):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, limit_choices_to={'is_active': True}, related_name="favorites")
+    article = models.ForeignKey(
+        Article, on_delete=models.CASCADE, related_name="favorites"
+    )
+
+    class Meta:
+        db_table = "favorite"
+        verbose_name = "Favorite"
+        verbose_name_plural = "Favorites"
+        ordering = ['-created_at']

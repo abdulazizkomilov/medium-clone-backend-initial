@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, permissions, parsers, status, generics
 from rest_framework.response import Response
 from rest_framework import exceptions
-from .models import Article, ArticleStatus, TopicFollow, Topic, Comment
+from .models import Article, ArticleStatus, TopicFollow, Topic, Comment, Favorite
 from articles.serializers import (
     ArticleCreateSerializer, ArticleDetailSerializer, 
     CommentSerializer, ArticleListSerializer, 
@@ -144,3 +144,24 @@ class ArticleDetailCommentsView(generics.ListAPIView):
     def get_queryset(self):
         article_id = self.kwargs.get('id')
         return Article.objects.filter(id=article_id)
+
+
+class FavoriteArticleView(generics.CreateAPIView, generics.DestroyAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = Article.objects.filter(status=ArticleStatus.PUBLISH)
+
+    def post(self, request, *args, **kwargs):
+        article = self.get_object()
+        favorite, is_created = Favorite.objects.get_or_create(
+            user=request.user, article=article)
+        if is_created:
+            return Response({'detail': "Maqola sevimlilarga qo'shildi."}, status=status.HTTP_201_CREATED)
+        else:
+            return Response({'detail': "Maqola sevimlilarga allaqachon qo'shilgan."}, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, *args, **kwargs):
+        article = self.get_object()
+        favorite = get_object_or_404(
+            Favorite, user=request.user, article=article)
+        favorite.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
