@@ -10,5 +10,6 @@ router.register(r'', views.ArticlesView, basename='articles')
 
 
 urlpatterns = [
+    path('articles/topics/<int:id>/follow/', views.TopicFollowView.as_view(), name='topic-follow'),
     path('articles/', include(router.urls)),
 ]

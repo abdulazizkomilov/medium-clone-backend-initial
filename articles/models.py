@@ -1,6 +1,6 @@
 # articles/models.py
 
-
+from django.db.models import UniqueConstraint
 from django.contrib.auth import get_user_model
 from django.core import validators
 from django.db import models
@@ -105,3 +105,25 @@ class Comment(BaseModel):
 
     def __str__(self):
         return f"Comment by {self.user} on {self.article}"
+    
+
+class TopicFollow(BaseModel):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, limit_choices_to={'is_active': True}, related_name="topic_follows"
+    )
+    topic = models.ForeignKey(
+        Topic, limit_choices_to={'is_active': True}, on_delete=models.CASCADE, related_name="topic_follows"
+    )
+
+    class Meta:
+        db_table = "topic_follow"
+        verbose_name = "Topic Follow"
+        verbose_name_plural = "Topic Follows"
+        ordering = ['-created_at']
+        constraints = [
+            UniqueConstraint(fields=['user', 'topic'],
+                             name='unique_user_topic')
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} follows {self.topic.name}"
