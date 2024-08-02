@@ -11,7 +11,7 @@ class ArticleFilter(django_filters.FilterSet):
     topic_id = django_filters.NumberFilter(method='filter_by_topic')
     is_recommend = django_filters.BooleanFilter(method='filter_by_recommend')
     search = django_filters.CharFilter(method='search_filter')
-    # is_user_favorites = django_filters.BooleanFilter(method='user_favorites')
+    is_user_favorites = django_filters.BooleanFilter(method='user_favorites')
 
     class Meta:
         model = Article
@@ -47,7 +47,7 @@ class ArticleFilter(django_filters.FilterSet):
             Q(topics__description__icontains=value)
         ).distinct()
     
-    # def user_favorites(self, queryset, name, value):
-    #     favorites = Favorite.objects.filter(user=self.request.user).order_by('-created_at')
-    #     article_ids = favorites.values_list('article_id', flat=True)
-    #     return queryset.filter(id__in=article_ids)
+    def user_favorites(self, queryset, name, value):
+        favorites = Favorite.objects.filter(user=self.request.user).order_by('-created_at')
+        article_ids = favorites.values_list('article_id', flat=True)
+        return queryset.filter(id__in=article_ids)

@@ -5,11 +5,11 @@ from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, permissions, parsers, status, generics
 from rest_framework.response import Response
 from rest_framework import exceptions
-from .models import Article, ArticleStatus, TopicFollow, Topic, Comment, Favorite
+from .models import Article, ArticleStatus, TopicFollow, Topic, Comment, Favorite, Clap
 from articles.serializers import (
     ArticleCreateSerializer, ArticleDetailSerializer, 
     CommentSerializer, ArticleListSerializer, 
-    ArticleDetailCommentsSerializer )
+    ArticleDetailCommentsSerializer, ClapSerializer )
 from django_filters.rest_framework import DjangoFilterBackend
 from articles.filters import ArticleFilter
 
@@ -165,3 +165,33 @@ class FavoriteArticleView(generics.CreateAPIView, generics.DestroyAPIView):
             Favorite, user=request.user, article=article)
         favorite.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+
+class ClapView(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ClapSerializer
+
+    def get_queryset(self):
+        return Article.objects.filter(status=ArticleStatus.PUBLISH)
+
+    def post(self, request, id):
+        user = request.user
+        article = get_object_or_404(self.get_queryset(), id=id)
+
+        clap, is_created = Clap.objects.get_or_create(user=user, article=article)
+        clap.count = min(clap.count + 1, 50)
+        clap.save()
+
+        response_serializer = self.serializer_class(clap)
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+
+    def delete(self, request, id):
+        user = request.user
+        article = get_object_or_404(self.get_queryset(), id=id)
+
+        try:
+            clap = Clap.objects.get(user=user, article=article)
+            clap.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Clap.DoesNotExist:
+            raise exceptions.NotFound
