@@ -18,7 +18,7 @@ from .serializers import (
     ForgotPasswordVerifyResponseSerializer,
     ForgotPasswordResponseSerializer, RecommendationSerializer, )
 from django.contrib.auth import get_user_model
-from .models import Recommendation
+from .models import Recommendation, Follow
 from articles.models import Article, ArticleStatus
 from django.shortcuts import get_object_or_404
 from django_redis import get_redis_connection
@@ -254,3 +254,55 @@ class RecommendationView(generics.GenericAPIView):
                 recommendation.less.add(topic)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+
+# users/views.py
+
+class AuthorFollowView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        author_id = self.kwargs.get('id')
+
+        follower = request.user
+        followee = get_object_or_404(User, id=author_id)
+
+        follow, is_created = Follow.objects.get_or_create(follower=follower, followee=followee)
+        if is_created:
+            return Response({'detail': "Mofaqqiyatli follow qilindi."}, status=status.HTTP_201_CREATED)
+        else:
+            return Response({'detail': "Siz allaqachon ushbu foydalanuvchini kuzatyapsiz."}, status=status.HTTP_200_OK)
+
+    def delete(self, request, *args, **kwargs):
+
+        author_id = self.kwargs.get('id')
+
+        follower = request.user
+        followee = get_object_or_404(User, id=author_id)
+
+        try:
+            follow = Follow.objects.get(follower=follower, followee=followee)
+            follow.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Follow.DoesNotExist:
+            raise exceptions.NotFound(detail="Follow relationship not found")
+            
+            
+            
+class FollowersListView(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = UserSerializer
+
+    def get_queryset(self):
+        user_id = self.request.user.id
+        return User.objects.filter(following__followee_id=user_id, is_active=True)  
+        
+        
+
+class FollowingListView(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = UserSerializer
+
+    def get_queryset(self):
+        user_id = self.request.user.id
+        return User.objects.filter(followers__follower_id=user_id, is_active=True)

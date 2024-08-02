@@ -120,3 +120,16 @@ class ReadingHistory(BaseModel):
         ordering = ['-created_at']
 
     
+class Follow(BaseModel):
+    follower = models.ForeignKey(
+        User, on_delete=models.CASCADE, limit_choices_to={'is_active': True}, related_name="following"
+    )
+    followee = models.ForeignKey(
+        User, on_delete=models.CASCADE, limit_choices_to={'is_active': True}, related_name="followers"
+    )
+
+    class Meta:
+        db_table = "follow"
+        verbose_name = "Follow"
+        verbose_name_plural = "Follows"
+        ordering = ['-created_at']
