@@ -1,6 +1,9 @@
 from django.contrib.auth import authenticate
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from django.conf import settings
+from users.errors import BIRTH_YEAR_ERROR_MSG
+
 
 User = get_user_model()
 
@@ -63,7 +66,19 @@ class ValidationErrorSerializer(serializers.Serializer):
         return super().to_representation(instance)
 
 
-class UserUpdateSerializer(serializers.ModelSerializer):
+class UserUpdateSerializer(serializers.ModelSerializer):		
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name', 'middle_name', 'email', 'avatar']
+        fields = ['id', 'first_name', 'last_name', 'middle_name', 'email', 'avatar', 'birth_year']  # birth_year yangi qo'shildi
+ 
+    def validate_birth_year(self, value):    # tug'ilgan yil oralig'ini tekshirish uchun to'rtinchi variant
+        if not (settings.BIRTH_YEAR_MIN < value < settings.BIRTH_YEAR_MAX):
+            raise serializers.ValidationError(BIRTH_YEAR_ERROR_MSG)
+        return value
+
+    def validate(self, data):                # tug'ilgan yil oralig'ini tekshirish uchun beshinchi variant
+        birth_year = data.get('birth_year')
+        if birth_year is not None:
+            if not (settings.BIRTH_YEAR_MIN < birth_year < settings.BIRTH_YEAR_MAX):
+                raise serializers.ValidationError({"birth_year": BIRTH_YEAR_ERROR_MSG})
+        return data
