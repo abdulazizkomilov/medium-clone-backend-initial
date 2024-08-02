@@ -24,6 +24,9 @@ from .services import TokenService, UserService, SendEmailService, OTPService
 from django.contrib.auth.hashers import make_password
 from secrets import token_urlsafe
 from .errors import ACTIVE_USER_NOT_FOUND_ERROR_MSG
+import logging
+logger = logging.getLogger(__name__)
+
 
 User = get_user_model()
 
@@ -149,9 +152,10 @@ class ForgotPasswordView(generics.CreateAPIView):
                 "email": email,
                 "otp_secret": otp_secret,
             })
-        except Exception:
+        except Exception as e:
             redis_conn = OTPService.get_redis_conn()
             redis_conn.delete(f"{email}:otp")
+            logger.error(f"Error sending email: {e}")
             raise ValidationError("Emailga xabar yuborishda xatolik yuz berdi")
 
 
