@@ -8,6 +8,7 @@ from django.core.exceptions import ValidationError
 from django.core import validators
 from users.errors import BIRTH_YEAR_ERROR_MSG
 from django.contrib.postgres.indexes import HashIndex
+from django.contrib.auth import get_user_model
 
 
 def file_upload(instance, filename):
@@ -70,3 +71,35 @@ class CustomUser(AbstractUser):
     def full_name(self):
         """ Returns the user's full name. """
         return f"{self.last_name} {self.first_name} {self.middle_name}"
+    
+
+
+class BaseModel(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+
+User = get_user_model()
+
+
+class Recommendation(BaseModel):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, limit_choices_to={'is_active': True}, related_name="recommendations"
+    )
+    more = models.ManyToManyField(
+        'articles.Topic', limit_choices_to={'is_active': True}, related_name="more_recommended", blank=True
+    )
+    less = models.ManyToManyField(
+        'articles.Topic', limit_choices_to={'is_active': True}, related_name="less_recommended", blank=True
+    )
+
+    class Meta:
+        db_table = "recommendation"
+        verbose_name = "Recommendation"
+        verbose_name_plural = "Recommendations"
+        ordering = ['-created_at']
+
+    def __str__(self) -> str:
+        return f"{self.user} - {self.more}"

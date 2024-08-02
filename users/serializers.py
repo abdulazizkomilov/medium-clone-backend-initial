@@ -131,3 +131,8 @@ class ResetPasswordResponseSerializer(serializers.Serializer):
             raise serializers.ValidationError(e.messages)
         return value    
 
+
+
+class RecommendationSerializer(serializers.Serializer):
+    more_article_id = serializers.IntegerField(required=False)
+    less_article_id = serializers.IntegerField(required=False)

@@ -16,8 +16,11 @@ from .serializers import (
     ForgotPasswordVerifyRequestSerializer,
     ResetPasswordResponseSerializer,
     ForgotPasswordVerifyResponseSerializer,
-    ForgotPasswordResponseSerializer, )
+    ForgotPasswordResponseSerializer, RecommendationSerializer, )
 from django.contrib.auth import get_user_model
+from .models import Recommendation
+from articles.models import Article, ArticleStatus
+from django.shortcuts import get_object_or_404
 from django_redis import get_redis_connection
 from .enums import TokenType
 from .services import TokenService, UserService, SendEmailService, OTPService
@@ -213,3 +216,41 @@ class ResetPasswordView(generics.UpdateAPIView):
         return Response(tokens)
 
 
+
+class RecommendationView(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = RecommendationSerializer
+
+    def get_serializer(self, *args, **kwargs):
+        serializer_class = self.get_serializer_class()
+        kwargs.setdefault('context', self.get_serializer_context())
+        return serializer_class(*args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = request.user
+        more_article_id = serializer.validated_data.get('more_article_id')
+        less_article_id = serializer.validated_data.get('less_article_id')
+
+        recommendation, is_created = Recommendation.objects.get_or_create(user=user)
+
+        if more_article_id:
+            article = get_object_or_404(Article, id=more_article_id, status=ArticleStatus.PUBLISH)
+            topics = article.topics.all()
+
+            for topic in topics:
+                if recommendation.less.filter(id=topic.id).exists():
+                    recommendation.less.remove(topic)
+                recommendation.more.add(topic)
+
+        if less_article_id:
+            article = get_object_or_404(Article, id=less_article_id, status=ArticleStatus.PUBLISH)
+            topics = article.topics.all()
+
+            for topic in topics:
+                if recommendation.more.filter(id=topic.id).exists():
+                    recommendation.more.remove(topic)
+                recommendation.less.add(topic)
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
