@@ -16,7 +16,7 @@ class ArticlesView(viewsets.ModelViewSet):
     parser_classes = [parsers.MultiPartParser]
     filter_backends = [DjangoFilterBackend]
     filterset_class = ArticleFilter
-    http_method_names = ['get', 'post', 'delete']
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_serializer_class(self):
         if self.action == 'create':
