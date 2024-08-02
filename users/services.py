@@ -1,6 +1,7 @@
 import datetime
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
+
 import redis
 from decouple import config
 from django.conf import settings
