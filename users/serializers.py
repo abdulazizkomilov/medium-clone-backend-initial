@@ -100,4 +100,34 @@ class ChangePasswordSerializer(serializers.Serializer):
         if data['new_password'] == data['old_password']:
             raise serializers.ValidationError("Yangi va eski parollar bir xil bo'lmasligi kerak")
         return data
-    
+
+class ForgotPasswordRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+
+    def validate_email(self, value):
+        if not User.objects.filter(email=value).exists():
+            raise ValidationError("Email topilmadi.")
+        return value
+
+class ForgotPasswordResponseSerializer(serializers.Serializer):
+    email = serializers.CharField(required=True)
+    otp_secret = serializers.CharField(required=True)
+
+class ForgotPasswordVerifyRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+    otp_code = serializers.CharField(required=True, max_length=6)
+
+class ForgotPasswordVerifyResponseSerializer(serializers.Serializer):
+    token = serializers.CharField(required=True)
+
+class ResetPasswordResponseSerializer(serializers.Serializer):
+    token = serializers.CharField(required=True)
+    password = serializers.CharField(required=True, min_length=8, write_only=True)
+		
+    def validate_password(self, value):
+        try:
+            validate_password(value)
+        except ValidationError as e:
+            raise serializers.ValidationError(e.messages)
+        return value    
+

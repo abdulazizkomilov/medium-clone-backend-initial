@@ -1,7 +1,12 @@
 import datetime
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
-
+from django.contrib.auth.hashers import make_password, check_password
+import random
+import string
+import uuid
+from secrets import token_urlsafe
+from .exceptions import OTPException
 import redis
 from decouple import config
 from django.conf import settings
@@ -109,3 +114,43 @@ class SendEmailService:
         )
         email.content_subtype = 'html'
         email.send(fail_silently=False)
+
+
+class OTPService:
+    @classmethod
+    def get_redis_conn(cls) -> redis.Redis:
+        return redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
+
+    @classmethod
+    def generate_otp(
+            cls,
+            email: str,
+            expire_in: int = 120,
+            check_if_exists: bool = True
+    ) -> tuple[str, str]:
+        redis_conn = cls.get_redis_conn()
+        otp_code = "".join(random.choices(string.digits, k=6))
+        secret_token = token_urlsafe()
+        otp_hash = make_password(f"{secret_token}:{otp_code}")
+        key = f"{email}:otp"
+
+        if check_if_exists and redis_conn.exists(key):
+            ttl = redis_conn.ttl(key)
+            raise OTPException(
+                ("Sizda yaroqli OTP kodingiz bor. {ttl} soniyadan keyin qayta urinib koʻring.").format(ttl=ttl)
+            )
+        redis_conn.set(key, otp_hash, ex=expire_in)
+        return otp_code, secret_token
+
+    @classmethod
+    def check_otp(cls, email: str, otp_code: str, otp_secret: str) -> None:
+        redis_conn = cls.get_redis_conn()
+        stored_hash = redis_conn.get(f"{email}:otp")
+
+        if not stored_hash or not check_password(f"{otp_secret}:{otp_code}", stored_hash.decode()):
+            raise OTPException("Yaroqsiz OTP kodi.")
+
+    @classmethod
+    def generate_token(cls) -> str:
+        return str(uuid.uuid4())
+
