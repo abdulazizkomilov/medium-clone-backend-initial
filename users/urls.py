@@ -14,4 +14,6 @@ urlpatterns = [
     path('<int:id>/follow/', views.AuthorFollowView.as_view(), name='author-follow'),
     path('followers/', views.FollowersListView.as_view(), name='followers'),
     path('following/', views.FollowingListView.as_view(), name='following'),
+    path('articles/popular/', views.PopularAuthorsView.as_view(),
+         name='popular-authors'),
 ]

@@ -1,5 +1,6 @@
 from rest_framework import status, permissions, generics, parsers, exceptions
 from rest_framework.response import Response
+from django.db.models import Sum
 from rest_framework.views import APIView
 from django.contrib.auth import authenticate, update_session_auth_hash
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -306,3 +307,16 @@ class FollowingListView(generics.ListAPIView):
     def get_queryset(self):
         user_id = self.request.user.id
         return User.objects.filter(followers__follower_id=user_id, is_active=True)
+
+
+class PopularAuthorsView(generics.ListAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return User.objects.filter(
+            is_active=True,
+            article__status=ArticleStatus.PUBLISH
+        ).annotate(
+            total_reads_count=Sum('article__reads_count')
+        ).order_by('-total_reads_count')[:5]
