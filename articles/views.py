@@ -2,12 +2,14 @@
 from rest_framework.views import APIView
 from django.utils.translation import gettext_lazy as _
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, permissions, parsers, status
+from rest_framework import viewsets, permissions, parsers, status, generics
 from rest_framework.response import Response
 from rest_framework import exceptions
-from .models import Article, ArticleStatus, TopicFollow, Topic
-from articles.serializers import ArticleCreateSerializer, ArticleDetailSerializer
-from articles.serializers import ArticleCreateSerializer, ArticleDetailSerializer, ArticleListSerializer
+from .models import Article, ArticleStatus, TopicFollow, Topic, Comment
+from articles.serializers import (
+    ArticleCreateSerializer, ArticleDetailSerializer, 
+    CommentSerializer, ArticleListSerializer, 
+    ArticleDetailCommentsSerializer )
 from django_filters.rest_framework import DjangoFilterBackend
 from articles.filters import ArticleFilter
 
@@ -92,3 +94,53 @@ class TopicFollowView(APIView):
                 {"detail": _("Siz '{topic_name}' mavzusini kuzatmaysiz.").format(topic_name=topic.name)},
                 status=status.HTTP_404_NOT_FOUND
             )
+        
+
+class CreateCommentsView(generics.CreateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = CommentSerializer
+
+    def perform_create(self, serializer):
+        article_id = self.kwargs.get('id')
+        article = generics.get_object_or_404(Article, id=article_id, status=ArticleStatus.PUBLISH)
+        serializer.save(article=article, user=self.request.user)    
+
+
+
+# articles/views.py
+
+class CommentsView(viewsets.ModelViewSet):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ['patch', 'delete']
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.user == request.user or request.user.is_superuser:
+            serializer = self.get_serializer(instance, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
+            return Response(serializer.data)
+        else:
+            raise exceptions.PermissionDenied
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.user == request.user or request.user.is_superuser:
+            self.perform_destroy(instance)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            raise exceptions.PermissionDenied
+
+    def perform_destroy(self, instance):
+        instance.delete()
+
+
+class ArticleDetailCommentsView(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ArticleDetailCommentsSerializer
+
+    def get_queryset(self):
+        article_id = self.kwargs.get('id')
+        return Article.objects.filter(id=article_id)
