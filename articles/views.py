@@ -5,11 +5,11 @@ from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, permissions, parsers, status, generics
 from rest_framework.response import Response
 from rest_framework import exceptions
-from .models import Article, ArticleStatus, TopicFollow, Topic, Comment, Favorite, Clap, Report
+from .models import Article, ArticleStatus, TopicFollow, Topic, Comment, Favorite, Clap, Report, FAQ
 from articles.serializers import (
     ArticleCreateSerializer, ArticleDetailSerializer, 
     CommentSerializer, ArticleListSerializer, 
-    ArticleDetailCommentsSerializer, ClapSerializer )
+    ArticleDetailCommentsSerializer, ClapSerializer, FAQSerializer )
 from django_filters.rest_framework import DjangoFilterBackend
 from articles.filters import ArticleFilter
 from rest_framework.decorators import action
@@ -276,3 +276,8 @@ class ReportArticleView(APIView):
             return Response({"detail": _("Maqola bir nechta shikoyatlar tufayli olib tashlandi.")}, status=status.HTTP_200_OK)
 
         return Response({"detail": _("Shikoyat yuborildi.")}, status=status.HTTP_201_CREATED)
+    
+class FAQListView(generics.ListAPIView):
+    queryset = FAQ.objects.all()
+    serializer_class = FAQSerializer
+    permission_classes = [permissions.AllowAny]

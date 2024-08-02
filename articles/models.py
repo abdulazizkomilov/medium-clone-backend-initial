@@ -154,3 +154,18 @@ class Report(BaseModel):
         verbose_name = "Report"
         verbose_name_plural = "Reports"
         ordering = ['-created_at']
+
+    
+
+class FAQ(BaseModel):
+    question = models.CharField(max_length=255)
+    answer = models.TextField()
+
+    class Meta:
+        db_table = "faq"
+        verbose_name = "FAQ"
+        verbose_name_plural = "FAQs"
+        ordering = ['question']
+
+    def __str__(self):
+        return self.question

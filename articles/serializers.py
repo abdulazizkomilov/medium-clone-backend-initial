@@ -2,7 +2,7 @@
 
 from rest_framework import serializers
 from django.db.models import Sum
-from articles.models import Topic, Clap, Article, ArticleStatus, Comment
+from articles.models import Topic, Clap, Article, ArticleStatus, Comment, FAQ
 from users.serializers import UserSerializer
 
 
@@ -96,3 +96,9 @@ class ArticleDetailCommentsSerializer(serializers.ModelSerializer):
     def get_comments(self, obj: Article) -> list[dict]:
         comments = Comment.objects.filter(article=obj, parent=None)
         return CommentSerializer(comments, many=True).data
+    
+
+class FAQSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FAQ
+        fields = ['id', 'question', 'answer']
