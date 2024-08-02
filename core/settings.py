@@ -3,6 +3,9 @@ from decouple import config
 from datetime import timedelta, datetime
 import os
 from django.utils.translation import gettext_lazy as _
+from loguru import logger
+import sys
+from .custom_logging import InterceptHandler
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -50,6 +53,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     'core.middlewares.CustomLocaleMiddleware',    # custom middleware uchun
     'django.middleware.locale.LocaleMiddleware',  # locale middleware
+    'core.middlewares.LogRequestMiddleware',
 ]
 
 ROOT_URLCONF = "core.urls"
@@ -259,3 +263,29 @@ EMAIL_USE_TLS = config('EMAIL_USE_TLS', default='')
 EMAIL_PORT = config('EMAIL_PORT', default='')
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+
+
+# LOGURU settings
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'intercept': {
+            '()': InterceptHandler,
+            'level': 0,
+        },
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': 'django.log',
+        },
+    },
+    'loggers': {
+        '': {
+            'handlers': ['intercept', 'file'],
+            'level': "DEBUG",
+            'propagate': True,
+        },
+    }
+}
