@@ -10,6 +10,7 @@ class ArticleFilter(django_filters.FilterSet):
     get_top_articles = django_filters.NumberFilter(method='filter_by_top')
     topic_id = django_filters.NumberFilter(method='filter_by_topic')
     is_recommend = django_filters.BooleanFilter(method='filter_by_recommend')
+    search = django_filters.CharFilter(method='search_filter')
 
     class Meta:
         model = Article
@@ -35,3 +36,12 @@ class ArticleFilter(django_filters.FilterSet):
 
     def filter_by_topic(self, queryset, name, value):
         return queryset.filter(topics__id=value)
+    
+    def search_filter(self, queryset, name, value):
+        return queryset.filter(
+            Q(title__icontains=value) |
+            Q(summary__icontains=value) |
+            Q(content__icontains=value) |
+            Q(topics__name__icontains=value) |
+            Q(topics__description__icontains=value)
+        ).distinct()
