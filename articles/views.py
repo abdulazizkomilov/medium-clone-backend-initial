@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, permissions, parsers, status, generics
 from rest_framework.response import Response
 from rest_framework import exceptions
-from .models import Article, ArticleStatus, TopicFollow, Topic, Comment, Favorite, Clap
+from .models import Article, ArticleStatus, TopicFollow, Topic, Comment, Favorite, Clap, Report
 from articles.serializers import (
     ArticleCreateSerializer, ArticleDetailSerializer, 
     CommentSerializer, ArticleListSerializer, 
@@ -251,3 +251,28 @@ class ClapView(generics.GenericAPIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         except Clap.DoesNotExist:
             raise exceptions.NotFound
+        
+    
+class ReportArticleView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        article_id = kwargs.get('id')
+
+        article = get_object_or_404(Article, id=article_id, status=ArticleStatus.PUBLISH)
+
+        if article.reports.filter(user=user).exists():
+            raise exceptions.ValidationError(_('Ushbu maqola allaqachon shikoyat qilingan.'))
+
+        report = Report.objects.create(article=article)
+        report.user.add(user)
+
+        unique_reporters_count = article.reports.values('user').distinct().count()
+
+        if unique_reporters_count > 3:
+            article.status = ArticleStatus.TRASH
+            article.save(update_fields=['status'])
+            return Response({"detail": _("Maqola bir nechta shikoyatlar tufayli olib tashlandi.")}, status=status.HTTP_200_OK)
+
+        return Response({"detail": _("Shikoyat yuborildi.")}, status=status.HTTP_201_CREATED)

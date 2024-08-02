@@ -12,6 +12,7 @@ router.register(r'comments', views.CommentsView, basename='comments')
 
 urlpatterns = [
     path('articles/<int:id>/clap/', views.ClapView.as_view(), name='article-clap'),
+    path('articles/<int:id>/report/', views.ReportArticleView.as_view(), name='report-article'),
     path('articles/<int:pk>/favorite/', views.FavoriteArticleView.as_view(), name='favorite-article'),
     path('articles/<int:id>/detail/comments/', views.ArticleDetailCommentsView.as_view(), name='article-detail-comments'),
     path('articles/<int:id>/comments/', views.CreateCommentsView.as_view(), name='create_comments'),

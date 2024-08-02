@@ -141,3 +141,16 @@ class Favorite(BaseModel):
         verbose_name = "Favorite"
         verbose_name_plural = "Favorites"
         ordering = ['-created_at']
+
+
+class Report(BaseModel):
+    user = models.ManyToManyField(
+        User, limit_choices_to={'is_active': True}, related_name="reports", blank=True)
+    article = models.ForeignKey(
+        'articles.Article', on_delete=models.CASCADE, related_name="reports")
+
+    class Meta:
+        db_table = "report"
+        verbose_name = "Report"
+        verbose_name_plural = "Reports"
+        ordering = ['-created_at']
