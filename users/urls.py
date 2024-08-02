@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 from . import views
 
 
@@ -23,4 +23,5 @@ urlpatterns = [
     path('following/', views.FollowingListView.as_view(), name='following'),
     path('articles/popular/', views.PopularAuthorsView.as_view(),
          name='popular-authors'),
+    path('', include(router.urls)),
 ]
