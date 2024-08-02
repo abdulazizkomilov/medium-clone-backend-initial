@@ -3,6 +3,7 @@ attrs==23.2.0
 cfgv==3.4.0
 distlib==0.3.8
 Django==4.2.14
+django-filter==24.2
 django-modeltranslation==0.19.5
 django-redis==5.4.0
 django-resized==1.0.2

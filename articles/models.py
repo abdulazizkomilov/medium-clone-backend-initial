@@ -85,3 +85,23 @@ class Clap(BaseModel):
 
     def __str__(self):
         return f"{self.user} - {self.count}"
+
+class Comment(BaseModel):
+    article = models.ForeignKey(
+        Article, on_delete=models.CASCADE, related_name="comments"
+    )
+    user = models.ForeignKey(User, limit_choices_to={
+                             'is_active': True}, on_delete=models.CASCADE)
+    parent = models.ForeignKey(
+        "self", null=True, blank=True, on_delete=models.CASCADE, related_name="replies"
+    )
+    content = models.TextField()
+
+    class Meta:
+        db_table = "comment"
+        verbose_name = "Comment"
+        verbose_name_plural = "Comments"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Comment by {self.user} on {self.article}"

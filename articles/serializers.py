@@ -1,7 +1,7 @@
 # articles/serializers.py
 
 from rest_framework import serializers
-
+from django.db.models import Sum
 from articles.models import Topic, Clap, Article, ArticleStatus
 from users.serializers import UserSerializer
 
@@ -49,3 +49,23 @@ class ArticleDetailSerializer(serializers.ModelSerializer):
         model = Article
         fields = ['id', 'author', 'title', 'summary', 'content', 'status', 'thumbnail', 'views_count', 'reads_count',
                   'created_at', 'updated_at', 'topics', 'claps']
+
+
+class ArticleListSerializer(serializers.ModelSerializer):
+    author = UserSerializer(read_only=True)
+    topics = TopicSerializer(many=True, read_only=True)
+    comments_count = serializers.SerializerMethodField()
+    claps_count = serializers.SerializerMethodField()
+
+    def get_comments_count(self, obj):
+        return obj.comments.count()
+
+    def get_claps_count(self, obj):
+        total_claps = obj.claps.aggregate(
+            total_claps=Sum('count'))['total_claps']
+        return total_claps if total_claps else 0
+
+    class Meta:
+        model = Article
+        fields = ['id', 'author', 'title', 'summary', 'content', 'status', 'thumbnail', 'views_count', 'reads_count',
+                  'created_at', 'updated_at', 'topics', 'comments_count', 'claps_count']
