@@ -1,6 +1,8 @@
 from pathlib import Path
 from decouple import config
 from datetime import timedelta, datetime
+import os
+from django.utils.translation import gettext_lazy as _
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -29,6 +31,7 @@ EXTERNAL_APPS = [
     'rest_framework_simplejwt',  # yangi package ni qo'shib olamiz
     'drf_spectacular',  
     'django_redis',
+    'modeltranslation',
 ]
 
 LOCAL_APPS = [
@@ -45,6 +48,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    'core.middlewares.CustomLocaleMiddleware',    # custom middleware uchun
+    'django.middleware.locale.LocaleMiddleware',  # locale middleware
 ]
 
 ROOT_URLCONF = "core.urls"
@@ -111,13 +116,26 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = 'en'
 
-TIME_ZONE = "Asia/Tashkent"
+TIME_ZONE = 'Asia/Tashkent'
 
 USE_I18N = True
 
 USE_TZ = True
+
+LANGUAGES = [
+    ('en', _('English')),
+    ('uz', _('Uzbek')),
+    ('ru', _('Russian')),
+]
+
+MODELTRANSLATION_LANGUAGES = ('en', 'uz', 'ru',)
+MODELTRANSLATION_DEFAULT_LANGUAGE = 'uz'
+
+LOCALE_PATHS = [
+    os.path.join(BASE_DIR, 'locale/'),
+]
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
