@@ -7,6 +7,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core import validators
 from users.errors import BIRTH_YEAR_ERROR_MSG
+from django.contrib.postgres.indexes import HashIndex
 
 
 def file_upload(instance, filename):
@@ -42,6 +43,12 @@ class CustomUser(AbstractUser):
                         name='check_birth_year_range'
                     )
                 ]
+        indexes = [
+                HashIndex(fields=['first_name'], name='%(class)s_first_name_hash_idx'),
+                HashIndex(fields=['last_name'], name='%(class)s_last_name_hash_idx'),
+                HashIndex(fields=['middle_name'], name='%(class)s_middle_name_hash_idx'),
+                models.Index(fields=['username'], name='%(class)s_username_idx'),
+            ]
 
     def clean(self):  # tug'ilgan yil oralig'ini tekshirish uchun ikkinchi variant
         super().clean()
