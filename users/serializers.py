@@ -5,6 +5,7 @@ from django.conf import settings
 from users.errors import BIRTH_YEAR_ERROR_MSG
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from .models import Notification
 
 User = get_user_model()
 
@@ -131,6 +132,11 @@ class ResetPasswordResponseSerializer(serializers.Serializer):
             raise serializers.ValidationError(e.messages)
         return value    
 
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = ['id', 'message', 'read_at', 'created_at']
 
 
 class RecommendationSerializer(serializers.Serializer):

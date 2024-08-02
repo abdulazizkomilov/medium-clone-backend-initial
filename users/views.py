@@ -1,6 +1,7 @@
-from rest_framework import status, permissions, generics, parsers, exceptions
+from rest_framework import status, permissions, generics, parsers, exceptions, viewsets
 from rest_framework.response import Response
 from django.db.models import Sum
+from datetime import timezone
 from rest_framework.views import APIView
 from django.contrib.auth import authenticate, update_session_auth_hash
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -17,9 +18,9 @@ from .serializers import (
     ForgotPasswordVerifyRequestSerializer,
     ResetPasswordResponseSerializer,
     ForgotPasswordVerifyResponseSerializer,
-    ForgotPasswordResponseSerializer, RecommendationSerializer, )
+    ForgotPasswordResponseSerializer, RecommendationSerializer, NotificationSerializer)
 from django.contrib.auth import get_user_model
-from .models import Recommendation, Follow
+from .models import Recommendation, Follow, Notification
 from articles.models import Article, ArticleStatus
 from django.shortcuts import get_object_or_404
 from django_redis import get_redis_connection
@@ -262,6 +263,9 @@ class RecommendationView(generics.GenericAPIView):
 class AuthorFollowView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
+    def create_notification(self, user, message):
+        Notification.objects.create(user=user, message=message)
+
     def post(self, request, *args, **kwargs):
         author_id = self.kwargs.get('id')
 
@@ -270,6 +274,8 @@ class AuthorFollowView(APIView):
 
         follow, is_created = Follow.objects.get_or_create(follower=follower, followee=followee)
         if is_created:
+            message_followee = "{} sizga follow qildi.".format(follower.username)
+            self.create_notification(followee, message_followee)
             return Response({'detail': "Mofaqqiyatli follow qilindi."}, status=status.HTTP_201_CREATED)
         else:
             return Response({'detail': "Siz allaqachon ushbu foydalanuvchini kuzatyapsiz."}, status=status.HTTP_200_OK)
@@ -320,3 +326,19 @@ class PopularAuthorsView(generics.ListAPIView):
         ).annotate(
             total_reads_count=Sum('article__reads_count')
         ).order_by('-total_reads_count')[:5]
+    
+
+class UserNotificationView(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = NotificationSerializer
+    http_method_names = ['get', 'patch']
+
+    def get_queryset(self):
+        return Notification.objects.filter(user=self.request.user, read_at__isnull=True)
+
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.read_at = timezone.now()
+        instance.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)

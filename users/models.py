@@ -146,4 +146,16 @@ class Pin(BaseModel):
         verbose_name = "Pin"
         verbose_name_plural = "Pins"
         ordering = ['-created_at']
-    
+
+class Notification(BaseModel):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, limit_choices_to={'is_active': True}, related_name="notifications"
+    )
+    message = models.TextField()
+    read_at = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        db_table = "notification"
+        verbose_name = "Notification"
+        verbose_name_plural = "Notifications"
+        ordering = ['-created_at']

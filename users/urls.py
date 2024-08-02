@@ -1,6 +1,13 @@
 from django.urls import path
 from . import views
 
+
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+router.register(r'notifications', views.UserNotificationView, basename='notification')
+
+
 urlpatterns = [
     path('signup/', views.SignupView.as_view(), name='signup'),
     path('login/', views.LoginView.as_view(), name='login'),
