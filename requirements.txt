@@ -3,7 +3,8 @@ cfgv==3.4.0
 distlib==0.3.8
 Django==4.2.14
 django-resized==1.0.2
-djangorestframework==3.15.2
+djangorestframework==3.15.1
+djangorestframework-simplejwt==5.3.1
 factory-boy==3.3.0
 Faker==25.9.2
 fakeredis==2.23.3
@@ -19,6 +20,7 @@ platformdirs==4.2.2
 pluggy==1.5.0
 pre-commit==3.6.0
 psycopg2-binary==2.9.9
+PyJWT==2.9.0
 pytest==8.2.1
 pytest-django==4.8.0
 pytest-factoryboy==2.7.0
