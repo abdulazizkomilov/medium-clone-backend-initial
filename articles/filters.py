@@ -2,6 +2,7 @@
 from django.db import models
 import django_filters
 from .models import Article, Favorite
+from users.models import Pin
 from users.models import Recommendation, ReadingHistory
 from django.db.models import Q
 
@@ -59,13 +60,13 @@ class ArticleFilter(django_filters.FilterSet):
         article_ids = reading_history.values_list('article_id', flat=True)
         return queryset.filter(id__in=article_ids)
 
-    # def author_articles(self, queryset, name, value):
-    #     user = self.request.user
+    def author_articles(self, queryset, name, value):
+        user = self.request.user
 
-    #     queryset = Article.objects.filter(author=user)
-    #     pin_subquery = Pin.objects.filter(article=models.OuterRef('pk'), user=user)
-    #     queryset = queryset.annotate(
-    #         is_pinned=models.Exists(pin_subquery)
-    #     )
-    #     queryset = queryset.order_by('-is_pinned', '-created_at')
-    #     return queryset
+        queryset = Article.objects.filter(author=user)
+        pin_subquery = Pin.objects.filter(article=models.OuterRef('pk'), user=user)
+        queryset = queryset.annotate(
+            is_pinned=models.Exists(pin_subquery)
+        )
+        queryset = queryset.order_by('-is_pinned', '-created_at')
+        return queryset

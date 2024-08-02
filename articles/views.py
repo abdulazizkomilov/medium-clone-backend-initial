@@ -13,7 +13,7 @@ from articles.serializers import (
 from django_filters.rest_framework import DjangoFilterBackend
 from articles.filters import ArticleFilter
 from rest_framework.decorators import action
-from users.models import ReadingHistory
+from users.models import ReadingHistory, Pin
 
 
 class ArticlesView(viewsets.ModelViewSet):
@@ -77,39 +77,39 @@ class ArticlesView(viewsets.ModelViewSet):
         article.save(update_fields=['reads_count'])
         return Response({"detail": _("Maqolani o'qish soni ortdi.")}, status=status.HTTP_200_OK)
     
-    # @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
-    # def archive(self, request, pk=None):
-    #     article = self.get_object()
-    #     if article.author == request.user or request.user.is_superuser:
-    #         article.status = ArticleStatus.ARCHIVE
-    #         article.save(update_fields=['status'])
-    #         return Response({"detail": _("Maqola arxivlandi.")}, status=status.HTTP_200_OK)
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def archive(self, request, pk=None):
+        article = self.get_object()
+        if article.author == request.user or request.user.is_superuser:
+            article.status = ArticleStatus.ARCHIVE
+            article.save(update_fields=['status'])
+            return Response({"detail": _("Maqola arxivlandi.")}, status=status.HTTP_200_OK)
     
         
-    # @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
-    # def pin(self, request, pk=None):
-    #     article = self.get_object()
-    #     user = request.user
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def pin(self, request, pk=None):
+        article = self.get_object()
+        user = request.user
     
-    #     if Pin.objects.filter(user=user, article=article).exists():
-    #         raise exceptions.ValidationError
+        if Pin.objects.filter(user=user, article=article).exists():
+            raise exceptions.ValidationError
     
-    #     Pin.objects.create(user=user, article=article)
-    #     return Response({"detail": _("Maqola pin qilindi.")}, status=status.HTTP_200_OK)
+        Pin.objects.create(user=user, article=article)
+        return Response({"detail": _("Maqola pin qilindi.")}, status=status.HTTP_200_OK)
     
     
-    # @action(detail=True, methods=['delete'], permission_classes=[permissions.IsAuthenticated])
-    # def unpin(self, request, pk=None):
-    #     article = self.get_object()
-    #     user = request.user
+    @action(detail=True, methods=['delete'], permission_classes=[permissions.IsAuthenticated])
+    def unpin(self, request, pk=None):
+        article = self.get_object()
+        user = request.user
     
-    #     pin = Pin.objects.filter(user=user, article=article).first()
-    #     if not pin:
-    #         raise exceptions.NotFound(_("Maqola topilmadi.."))
+        pin = Pin.objects.filter(user=user, article=article).first()
+        if not pin:
+            raise exceptions.NotFound(_("Maqola topilmadi.."))
     
-    #     pin.delete()
+        pin.delete()
     
-    #     return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class TopicFollowView(APIView):
