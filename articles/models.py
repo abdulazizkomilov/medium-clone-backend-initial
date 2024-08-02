@@ -1,2 +1,87 @@
+# articles/models.py
 
-# Create your models here.
+
+from django.contrib.auth import get_user_model
+from django.core import validators
+from django.db import models
+
+User = get_user_model()
+
+
+class BaseModel(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+
+
+class ArticleStatus(models.TextChoices):
+    DRAFT = "draft", "Editing article"
+    PENDING = "pending", "Pending"
+    PUBLISH = "publish", "Publish"
+    PRIVATE = "private", "Private"
+    TRASH = "trash", "Trash"
+    ARCHIVE = "archive", "Archive"
+
+
+class Topic(BaseModel):
+    name = models.CharField(max_length=255)
+    is_active = models.BooleanField(default=True)
+    description = models.TextField(blank=True, null=True)
+
+    class Meta:
+        db_table = "topic"
+        verbose_name = "Topic"
+        verbose_name_plural = "Topics"
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
+class Article(BaseModel):
+    author = models.ForeignKey(User, limit_choices_to={
+        'is_active': True}, on_delete=models.CASCADE)
+    title = models.CharField(max_length=255)
+    summary = models.TextField()
+    content = models.TextField()
+    thumbnail = models.ImageField(
+        upload_to="articles/thumbnails/", blank=True, null=True)
+    status = models.CharField(
+        max_length=50, choices=ArticleStatus.choices, default=ArticleStatus.DRAFT
+    )
+    topics = models.ManyToManyField(Topic, limit_choices_to={
+        'is_active': True}, related_name="articles")
+    views_count = models.PositiveIntegerField(default=0)
+    reads_count = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        db_table = "article"
+        verbose_name = "Article"
+        verbose_name_plural = "Articles"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.title} - {self.topics}"
+
+
+class Clap(BaseModel):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, limit_choices_to={'is_active': True}, related_name="claps")
+    article = models.ForeignKey(
+        Article, on_delete=models.CASCADE, related_name="claps")
+    count = models.PositiveIntegerField(
+        default=0,
+        validators=[
+            validators.MaxValueValidator(50)
+        ])
+
+    class Meta:
+        db_table = "clap"
+        verbose_name = "Clap"
+        verbose_name_plural = "Claps"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user} - {self.count}"
