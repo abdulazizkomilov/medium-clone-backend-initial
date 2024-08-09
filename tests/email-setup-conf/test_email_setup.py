@@ -1,4 +1,5 @@
 import pytest
+import os
 import importlib
 
 @pytest.mark.order(1)
@@ -13,7 +14,8 @@ def test_env_example_file():
     ]
 
     try:
-        with open(".env.example", "r") as file:
+        current_directory = os.getcwd()
+        with open(os.path.join(current_directory, ".env.example"), "r") as file:
             content = file.read()
             for setting in required_settings:
                 assert f"{setting}=" in content, f"{setting} is missing in .env.example"
