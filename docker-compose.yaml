@@ -26,8 +26,6 @@ services:
       - .env.example
     expose:
       - "5432"
-    ports:
-      - "5432:5432"
     environment:
       - POSTGRES_USER=${DB_USER-medium_user}
       - POSTGRES_PASSWORD=${DB_PASSWORD-medium_user_password}
