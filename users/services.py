@@ -16,7 +16,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from users.enums import TokenType
 
 # redis uchun malumotlarni olamiz
-REDIS_HOST = config("REDIS_HOST", 'medium_redis_host')
+REDIS_HOST = config("REDIS_HOST", 'localhost')
 REDIS_PORT = config("REDIS_PORT", 6379)
 REDIS_DB = config("REDIS_DB", 1)
 User = get_user_model()
