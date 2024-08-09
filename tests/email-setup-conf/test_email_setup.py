@@ -1,5 +1,4 @@
 import pytest
-import os
 import importlib
 
 @pytest.mark.order(1)
@@ -13,10 +12,8 @@ def test_env_example_file():
         "EMAIL_HOST_PASSWORD",
     ]
 
-    env_example_path = os.path.join(os.getcwd(), ".env.example")
-
     try:
-        with open(env_example_path, "r") as file:
+        with open(".env.example", "r") as file:
             content = file.read()
             for setting in required_settings:
                 assert f"{setting}=" in content, f"{setting} is missing in .env.example"
