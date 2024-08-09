@@ -12,10 +12,11 @@ def test_env_example_file():
         "EMAIL_HOST_USER",
         "EMAIL_HOST_PASSWORD",
     ]
-
+    current_directory = os.getcwd()
+    env_example_path = os.path.join(current_directory, ".env.example")
     try:
         current_directory = os.getcwd()
-        with open(os.path.join(current_directory, ".env.example"), "r") as file:
+        with open(env_example_path, "r") as file:
             content = file.read()
             for setting in required_settings:
                 assert f"{setting}=" in content, f"{setting} is missing in .env.example"
